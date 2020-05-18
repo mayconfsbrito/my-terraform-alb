@@ -12,6 +12,10 @@ This repo creates some infra assets in Amazon AWS:
   * 1 for EC2 instances 
 * Network issues like VPC, Subnet, Target Group, Listeners and etc.
 
+### Prerequisites ###
+
+* Terraform >= 0.12.25
+
 ## How to Use ##
 
 ### Variables ###
@@ -32,5 +36,6 @@ terraform init
 terraform plan -out myplan.plan
 terraform apply myplan.plan
 ```
+
 
 
