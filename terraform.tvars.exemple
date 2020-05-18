@@ -1,0 +1,12 @@
+aws_iam_info = {
+  aws_access_key = "YOUR_ACCESS_KEY"
+  aws_secret_key = "YOUR_SECRET_KEY"
+  region         = "us-east-1"
+}
+
+ec2_info = {
+  instance_type    = "t2.micro"
+  key_name         = "KEY_PAIR_NAME"
+  private_key_path = "PATH_FOR_YOUR_PRIVATE_KEY_PAIR_FILE.pem"
+  username         = "ec2-user"
+}
