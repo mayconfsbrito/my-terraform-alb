@@ -15,16 +15,9 @@ This repo creates some infra assets in Amazon AWS:
 ### Prerequisites ###
 
 * Terraform >= 0.12.25
+* Aws cli shared credentials file
 
 ## How to Use ##
-
-### Variables ###
-
-Create a file **terraform.tfvars** from **terraform.tfvars.example** and set at least values for the variables below:
-* aws_iam_info.aws_access_key
-* aws_iam_info.aws_secret_key
-* ec2_info.key_name
-* ec2_info.private_key_path
 
 ### Run ###
 
