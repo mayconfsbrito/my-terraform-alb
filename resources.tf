@@ -78,30 +78,29 @@ resource "aws_security_group" "lb-sg" {
   }
 }
 
+################################### KEYPAIR ###################################
+resource "tls_private_key" "new-keypair" {
+  algorithm = "RSA"
+}
+
+module "key_pair" {
+  source = "terraform-aws-modules/key-pair/aws"
+
+  key_name   = "ec2-keypair"
+  public_key = tls_private_key.new-keypair.public_key_openssh
+}
+
 ################################## INSTANCES ##################################
 resource "aws_instance" "nginx" {
   instance_type          = var.ec2_info.instance_type
   ami                    = data.aws_ami.ami-amz-linux.id
   subnet_id              = aws_subnet.subnet2.id
   vpc_security_group_ids = [module.web_server_sg.this_security_group_id]
-  key_name               = var.ec2_info.key_name
-
-  connection {
-    user        = var.ec2_info.username
-    type        = "ssh"
-    host        = self.public_ip
-    private_key = file(var.ec2_info.private_key_path)
-  }
+  key_name               = module.key_pair.this_key_pair_key_name
+  user_data              = file("scripts/nginx.sh")
 
   tags = {
     Name = "web_nginx"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo yum install nginx -y",
-      "sudo service nginx start"
-    ]
   }
 }
 
@@ -110,30 +109,14 @@ resource "aws_instance" "apache" {
   ami                    = data.aws_ami.ami-amz-linux.id
   subnet_id              = aws_subnet.subnet2.id
   vpc_security_group_ids = [module.web_server_sg.this_security_group_id]
-  key_name               = var.ec2_info.key_name
-
-  connection {
-    user        = var.ec2_info.username
-    type        = "ssh"
-    host        = self.public_ip
-    private_key = file(var.ec2_info.private_key_path)
-  }
+  user_data              = file("scripts/apache.sh")
 
   tags = {
     Name = "web_apache"
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo yum install httpd24 amazon-linux-extras -y",
-      "sudo cp /var/www/noindex/index.html /var/www/html/",
-      "sudo service httpd start",
-      "sudo chkconfig httpd on"
-    ]
-  }
 }
 
-################################ LOAD BALANCER ################################
+# ################################ LOAD BALANCER ################################
 resource "aws_lb_target_group" "tg_web" {
   name     = "tg-web"
   port     = 80
@@ -148,7 +131,19 @@ resource "aws_lb_target_group" "tg_web" {
   }
 }
 
-################################ TARGET GROUPS ################################
+# ################################ LB LISTENERS ################################
+resource "aws_lb_listener" "web_80" {
+  load_balancer_arn = aws_lb.lb_web.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tg_web.arn
+  }
+}
+
+# ################################ TARGET GROUPS ################################
 resource "aws_lb_target_group_attachment" "nginx" {
   target_group_arn = aws_lb_target_group.tg_web.arn
   target_id        = aws_instance.nginx.id
@@ -168,17 +163,3 @@ resource "aws_lb" "lb_web" {
   enable_deletion_protection = false
   depends_on                 = [aws_internet_gateway.igw]
 }
-
-################################ LB LISTENERS ################################
-resource "aws_lb_listener" "web_80" {
-  load_balancer_arn = aws_lb.lb_web.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.tg_web.arn
-  }
-}
-
-
