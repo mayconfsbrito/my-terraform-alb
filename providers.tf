@@ -1,7 +1,7 @@
 variable "aws_iam_info" {}
 
 provider "aws" {
-  access_key = var.aws_iam_info.aws_access_key
-  secret_key = var.aws_iam_info.aws_secret_key
-  region     = var.aws_iam_info.region
+  shared_credentials_file = var.aws_iam_info.path_credentials_file
+  profile                 = var.aws_iam_info.profile
+  region                  = var.aws_iam_info.region
 }

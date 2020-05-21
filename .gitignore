@@ -1,5 +1,4 @@
 **/.terraform/*
-terraform.tfvars
 *.plan
 *.tfstate*
 todo
